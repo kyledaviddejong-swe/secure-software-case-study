@@ -1,54 +1,35 @@
 # Java Web Application · Security Case Study
 
-A focused security refactor of a supplied Spring application, covering **SHA-256 checksum generation, local HTTPS, certificate tooling, and dependency review**. The report explains what I changed, how I checked it, and what remained unresolved.
+A focused refactor of a supplied Spring application demonstrating **SHA-256 checksum generation, local HTTPS configuration, certificate tooling, and dependency review**.
 
 **Read the [security report (PDF)](docs/security-report.pdf)** · [Editable Word version](docs/security-report.docx)
 
 ## My contribution
 
-I added a route that returns a fixed string and its SHA-256 digest, generated a self-signed certificate and keystore, and configured the application to serve the route over HTTPS. I then ran the application, inspected its output, and used OWASP Dependency-Check to review the dependencies. AES-256 was part of my recommendation, not a demonstrated implementation.
+I added a route that returns a fixed string and its SHA-256 digest, generated a self-signed certificate and keystore, and configured the application to serve the route over HTTPS. I checked the output manually and reviewed the dependencies with OWASP Dependency-Check.
 
-The useful part of this exercise was working within an existing project and keeping the change controlled. It also required separating confidentiality, checksums, certificate trust, and dependency findings instead of treating them as interchangeable measures of security.
+Working within an existing application required keeping the change controlled and distinguishing the purpose of each security mechanism. AES-256 was a recommendation in the report; the demonstrated work concerned hashing and HTTPS configuration.
 
-## Evidence at a glance
+## Results
 
-| Area | What the retained evidence shows |
+![Checksum output at the local HTTPS endpoint](screenshots/localhost-checksum.png)
+
+The visible string and digest match an independent SHA-256 calculation. The browser warning reflects the local self-signed certificate setup.
+
+| Evidence | Result |
 |---|---|
-| Checksum route | A fixed string and its SHA-256 digest at `https://localhost:8443/hash` |
-| Certificate setup | Certificate and keystore filenames in the project tree; the browser still shows a trust warning |
-| Dependency review | Historical scan with 49 dependencies scanned, 29 unique, 13 vulnerable dependencies, and 160 findings |
-| AES-256 | Recommendation in the report; no verified implementation or negotiated cipher suite |
+| [Checksum output](screenshots/localhost-checksum.png) | Fixed string and SHA-256 digest at `https://localhost:8443/hash` |
+| [Certificate project tree](screenshots/certificate-project-tree.png) | Certificate and keystore files in the original project |
+| [Dependency report](screenshots/dependency-check.png) | 49 dependencies scanned, 29 unique, 13 vulnerable dependencies, and 160 findings |
 
-![Historical checksum output with the original certificate warning](screenshots/localhost-checksum.png)
+## Scope
 
-The SHA-256 digest was independently recalculated during portfolio cleanup and matches the visible string. That verifies this input/output pair, not the original Java application's runtime behavior.
+This is a documented academic exercise using a supplied Spring starter application and fictional Artemis Financial scenario. The report and screenshots record the April 19, 2026 work; application source and a reproducible build are not included.
 
-Additional original screenshots: [certificate project tree](screenshots/certificate-project-tree.png) · [dependency scan at full resolution](screenshots/dependency-check.png).
-
-## Scope and limitations
-
-This is a **report-based case study**. Application source and a build package are not present, so there are no reproducible run instructions and no fresh application or dependency-scan results. The screenshots date from April 19, 2026.
-
-The dependency scan was not clean and includes high and critical findings. The original work attributed them to older starter dependencies, but no before-and-after evidence establishes that the refactor introduced no vulnerabilities. The case study does not claim remediation or production readiness.
-
-The browser's self-signed certificate warning remains visible. A plain SHA-256 digest returned alongside its input also does not, by itself, authenticate that data or prevent an attacker from replacing both values. These boundaries are explained in the report.
+The dependency scan retained high and critical findings, and remediation is not demonstrated. The self-signed setup was not publicly trusted. A plain checksum also does not authenticate data if an attacker can replace both the value and digest. The report explains these limits and distinguishes the implemented work from recommendations.
 
 ## What I learned
 
-Designing with security in mind before coding begins, during development, and after release helps avoid expensive rework. It was particularly useful to distinguish existing issues from the changes I made. Knowing where my work begins and ends helps focus effort, while documenting inherited problems keeps that limited scope from becoming an excuse to ignore them.
+A narrow change is easier to inspect and test, but inherited dependency issues still need attention. The practices I would carry forward are using established cryptographic tools, testing after meaningful changes, and recording unresolved findings so the next development step is clear.
 
-The tools and practices I would carry forward are Java's built-in cryptographic and certificate tooling, dependency review, and testing after meaningful changes. The next technical step would be to review the scan findings, update affected components, and test again. That follow-up is not represented as completed work here.
-
-## Academic context
-
-Prepared for SNHU CS-305 using the supplied Spring starter application and fictional Artemis Financial scenario. The starter application and client scenario are not my original product or a real client engagement.
-
-The portfolio edition removes template instructions, supplied branding, and duplicate console screenshots containing local machine details. The three retained screenshots are unchanged from the original report, including existing blacked-out browser areas. No private keys, keystore, or original repository history were imported. AI assistance was used to clean the presentation, correct technical overclaims, and add references. The original school submission is preserved separately.
-
-## References
-
-- [NIST FIPS 197 — AES](https://csrc.nist.gov/pubs/fips/197/final)
-- [Oracle Java SE 11 — MessageDigest](https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/security/MessageDigest.html)
-- [Oracle Java SE 11 — keytool](https://docs.oracle.com/en/java/javase/11/tools/keytool.html)
-- [OWASP — Transport Layer Security](https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Security_Cheat_Sheet.html)
-- [OWASP — Dependency-Check](https://owasp.org/projects/dependency-check)
+See [credits and acknowledgments](CREDITS.md). The report includes references to NIST, Oracle, and OWASP documentation.
